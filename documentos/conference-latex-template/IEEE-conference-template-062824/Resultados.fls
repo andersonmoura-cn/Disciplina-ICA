@@ -1,7 +1,7 @@
 PWD c:\Users\ander\OneDrive\Desktop\Disciplina-ICA\documentos\conference-latex-template\IEEE-conference-template-062824
 INPUT C:\Users\ander\AppData\Local\MiKTeX\miktex\data\le\pdftex\pdflatex.fmt
-INPUT c:\Users\ander\OneDrive\Desktop\Disciplina-ICA\documentos\conference-latex-template\IEEE-conference-template-062824\IEEE-conference-template-062824.tex
-OUTPUT IEEE-conference-template-062824.log
+INPUT c:\Users\ander\OneDrive\Desktop\Disciplina-ICA\documentos\conference-latex-template\IEEE-conference-template-062824\Resultados.tex
+OUTPUT Resultados.log
 INPUT .\IEEEtran.cls
 INPUT IEEEtran.cls
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\ot1ptm.fd
@@ -116,10 +116,10 @@ INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\tex\latex\tools\array.sty
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\tex\latex\graphics\color.sty
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\tex\latex\l3backend\l3backend-pdftex.def
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\tex\latex\l3backend\l3backend-pdftex.def
-INPUT .\IEEE-conference-template-062824.aux
-INPUT .\IEEE-conference-template-062824.aux
-INPUT IEEE-conference-template-062824.aux
-OUTPUT IEEE-conference-template-062824.aux
+INPUT .\Resultados.aux
+INPUT .\Resultados.aux
+INPUT Resultados.aux
+OUTPUT Resultados.aux
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\tex\context\base\mkii\supp-pdf.mkii
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\tex\context\base\mkii\supp-pdf.mkii
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\tex\context\base\mkii\supp-pdf.mkii
@@ -162,7 +162,7 @@ INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\sym
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm10.tfm
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm7.tfm
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm5.tfm
-OUTPUT IEEE-conference-template-062824.pdf
+OUTPUT Resultados.pdf
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\times\ptmr7t.vf
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\times\ptmr8r.tfm
 INPUT C:\Users\ander\AppData\Local\MiKTeX\fonts\map\pdftex\pdftex.map
@@ -281,7 +281,7 @@ INPUT ..\..\..\images\Anderson\biplot_pca_2variaveis.png
 INPUT ..\..\..\images\Anderson\biplot_pca_2variaveis.png
 INPUT ..\..\..\images\Anderson\biplot_pca_2variaveis.png
 INPUT ..\..\..\images\Anderson\biplot_pca_2variaveis.png
-INPUT IEEE-conference-template-062824.aux
+INPUT Resultados.aux
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmmi10.pfb
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmmi10.pfb
 INPUT C:\Users\ander\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmmi8.pfb

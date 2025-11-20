@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1763662424.16497 "c:/Users/ander/OneDrive/Desktop/Disciplina-ICA/documentos/conference-latex-template/IEEE-conference-template-062824/IEEE-conference-template-062824.tex" "IEEE-conference-template-062824.pdf" "IEEE-conference-template-062824" 1763662426.85596 0
+["pdflatex"] 1763662473.34634 "c:/Users/ander/OneDrive/Desktop/Disciplina-ICA/documentos/conference-latex-template/IEEE-conference-template-062824/Resultados.tex" "Resultados.pdf" "Resultados" 1763662476.061 0
   "../../../images/Anderson/Analise_Condicional/HR.png" 1763662178 320955 6f4e036fbb1662a1ed77fdffae5963c5 ""
   "../../../images/Anderson/Analise_Condicional/MEAN_RR.png" 1763662178 344453 40709eb72dadb2df0c0dbf33d455ddd8 ""
   "../../../images/Anderson/Scatter_Condicional/Scatter MEAN_RR x HR.png" 1763662178 174140 8030f29bc29d2a69bc3fb139aa8f3e43 ""
@@ -103,12 +103,12 @@
   "C:/Users/ander/AppData/Local/Programs/MiKTeX/tex/latex/translations/dicts/translations-basic-dictionary-english.trsl" 1644048522 5588 0c1628daf15f4411ff1f463114c634a3 ""
   "C:/Users/ander/AppData/Local/Programs/MiKTeX/tex/latex/translations/translations.sty" 1644048522 44247 2188b95d0ee74e31eca4d316263c58a7 ""
   "C:/Users/ander/AppData/Local/Programs/MiKTeX/tex/latex/xcolor/xcolor.sty" 1729265222 55384 b454dec21c2d9f45ec0b793f0995b992 ""
-  "IEEE-conference-template-062824.aux" 1763662426 4962 0aa80ff65a70531bb0ddb5fd259f71f3 "pdflatex"
-  "IEEE-conference-template-062824.tex" 1763662420 30461 4f134584506cdccb9b1f82d09b4c11ce ""
   "IEEEtran.cls" 1763662178 288304 5b2e4fa15b0f7eabb840ebf67df4c0f7 ""
-  "c:/Users/ander/OneDrive/Desktop/Disciplina-ICA/documentos/conference-latex-template/IEEE-conference-template-062824/IEEE-conference-template-062824.tex" 1763662420 30461 4f134584506cdccb9b1f82d09b4c11ce ""
+  "Resultados.aux" 1763662475 4962 0aa80ff65a70531bb0ddb5fd259f71f3 "pdflatex"
+  "Resultados.tex" 1763662420 30461 4f134584506cdccb9b1f82d09b4c11ce ""
+  "c:/Users/ander/OneDrive/Desktop/Disciplina-ICA/documentos/conference-latex-template/IEEE-conference-template-062824/Resultados.tex" 1763662420 30461 4f134584506cdccb9b1f82d09b4c11ce ""
   (generated)
-  "IEEE-conference-template-062824.aux"
-  "IEEE-conference-template-062824.log"
-  "IEEE-conference-template-062824.pdf"
+  "Resultados.aux"
+  "Resultados.log"
+  "Resultados.pdf"
   (rewritten before read)
