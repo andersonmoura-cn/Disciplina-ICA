@@ -1,7 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1761004650.28707 "/home/vinicius-lavor/Área de trabalho/Disciplina-ICA/vinicius.tex" "vinicius.pdf" "vinicius" 1761004651.31508 0
+["pdflatex"] 1763661352.99991 "/home/vinicius-lavor/Área de trabalho/Disciplina-ICA/latex-vinicius/vinicius.tex" "vinicius.pdf" "vinicius" 1763661353.95721 0
   "/etc/texmf/web2c/texmf.cnf" 1760645179.31316 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/vinicius-lavor/Área de trabalho/Disciplina-ICA/vinicius.tex" 1760979239.02725 7427 29ab0186c4d026020cdbcd3d193758e3 ""
+  "/home/vinicius-lavor/Área de trabalho/Disciplina-ICA/latex-vinicius/vinicius.tex" 1763661351.44001 7427 29ab0186c4d026020cdbcd3d193758e3 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/times/ptmb7t.tfm" 1136768653 2172 fd0c924230362ff848a33632ed45dc23 ""
@@ -77,8 +77,8 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1760825054.43327 165012 f177baa1c39a3ebd62c3096a43521a0d ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1760825082 6831111 827c664093af1856a15289a452714d80 ""
-  "vinicius.aux" 1761004651.15874 453 801e02566d639007f25abc4dfd76a274 "pdflatex"
-  "vinicius.tex" 1760979239.02725 7427 29ab0186c4d026020cdbcd3d193758e3 ""
+  "vinicius.aux" 1763661353.79396 453 801e02566d639007f25abc4dfd76a274 "pdflatex"
+  "vinicius.tex" 1763661351.44001 7427 29ab0186c4d026020cdbcd3d193758e3 ""
   (generated)
   "vinicius.aux"
   "vinicius.log"
