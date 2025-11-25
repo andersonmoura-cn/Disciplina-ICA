@@ -17,8 +17,7 @@ def OLS_beta(x, y, lambida = 0):
     x = np.array(x)
     y = np.array(y)
     beta_0 = np.ones((x.shape[0], 1))
-    print(x.shape, beta_0.shape)
-
+    
     X = np.hstack((beta_0, x))
 
     if np.linalg.det(X.T @ X) == 0:
@@ -26,7 +25,7 @@ def OLS_beta(x, y, lambida = 0):
     else:
         inv = np.linalg.inv(X.T @ X + lambida * np.eye(X.shape[1]))
     Beta = inv @ X.T @ y 
-    print(X)
+    #print(X)
     return Beta, X
 
 def OLS_predict(X, Beta):
@@ -138,8 +137,6 @@ def k_fold(x,y,k):
 #     print("Teste  X:", i[2])
 #     print("Teste  Y:", i[3])
 #     print()
-    
-
 
 def kcv(x,y,params, k = 5, metric = rmse, modelo = OLS_beta):
     folds = k_fold(x, y, k)
@@ -170,19 +167,23 @@ def kcv(x,y,params, k = 5, metric = rmse, modelo = OLS_beta):
 x_gerado, y_gerado = gerar_dados(n = 50, sigma = 1)
 X_train, X_test, y_train, y_test = train_test_split(x_gerado, y_gerado, test_size=0.30)
 lambida = [1,2,3]
-# escolhe lambda para k=5 cv
-lamb, erros = kcv(X_train, y_train, lambida)
-print("Melhor lambda:", lamb)
-print("Erros:", erros)
 
-# treina modelo com lambda escolhido
-Beta, _ = OLS_beta(X_train, y_train, lamb)
+ks = [5, 10]
+metrics = [rmse, r2]
 
-# predicao
-y_pred = OLS_predict(X_test, Beta)  
+for metric in metrics:
+    for k in ks:
+        lamb, erros = kcv(X_train, y_train, lambida, k = k, metric=metric)
+        print("Melhor lambda:", lamb)
+        #print("Erros:", erros)
 
-# avaliar modelo
-print(f"RMSE teste: {rmse(y_test, y_pred)}")
+        # treina modelo com lambda escolhido
+        Beta, _ = OLS_beta(X_train, y_train, lamb)
 
+        # predicao
+        y_pred = OLS_predict(X_test, Beta)  
 
-
+        # avaliar modelo
+        print(f"{metric.__name__} teste(k = {k}): {metric(y_test, y_pred)}")
+        print()
+  
