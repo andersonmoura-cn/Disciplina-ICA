@@ -4,14 +4,36 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import r2_score as r2
 from sklearn.metrics import root_mean_squared_error as rmse
 from sklearn.model_selection import train_test_split
+from pathlib import Path
+
 
 np.random.seed(42)
 
-def gerar_dados(n = 100, sigma = 0):
-    x_teste = np.linspace(0, 10, n).reshape(-1, 1)
+# mudanca do chat:
+def img_save(file_name):
+    # Caminho base: projeto (DISCIPLINA-ICA)
+    base = Path(__file__).resolve().parent.parent.parent  
+
+    # Caminho da pasta de imagens
+    folder = base / "images" / "hw2"
+    folder.mkdir(parents=True, exist_ok=True)
+
+    # Caminho completo do arquivo
+    file_path = folder / f"{file_name}.png"
+
+    plt.savefig(file_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
+    print(f"Imagem salva em: {file_path}")
+
+
+def gerar_dados(n = 100, sigma = 0, grau = 5):
+    x_teste = np.linspace(0, 532, n).reshape(-1, 1)
+    X = np.hstack([x_teste**i for i in range(1, grau + 1)])
+
     ruido = np.random.normal(0, sigma, n)
     y_teste = 3 + 5 * x_teste[:, 0] + ruido
-    return x_teste, y_teste
+    return X, y_teste
 
 def OLS_beta(x, y, lambida = 0):
     x = np.array(x)
@@ -87,13 +109,15 @@ def k_fold(x,y,k):
 # print(y_p)
 
 
-def k_fold(x,y,k):
+def k_fold(x,y,k, sort = True):
     x = np.array(x)
     y = np.array(y)
 
     # embaralha indices
     indices = np.arange(len(x))
-    np.random.shuffle(indices)
+
+    if sort:
+        np.random.shuffle(indices)
 
     # embaralha dados usando indices
     X_emb = x[indices]
@@ -138,8 +162,8 @@ def k_fold(x,y,k):
 #     print("Teste  Y:", i[3])
 #     print()
 
-def kcv(x,y,params, k = 5, metric = rmse, modelo = OLS_beta):
-    folds = k_fold(x, y, k)
+def kcv(x,y,params, k = 5, metric = rmse, modelo = OLS_beta, sort = True):
+    folds = k_fold(x, y, k, sort=sort)
     erros = []
 
     for lamb in params:
@@ -159,21 +183,27 @@ def kcv(x,y,params, k = 5, metric = rmse, modelo = OLS_beta):
             n+=1
         
         erros.append(erro_medio)
-    # indice do lambda que produziu menor erro medio
-    indice_min = np.argmin(erros)
-    return params[indice_min], erros
+    return erros
     
 # teste
 x_gerado, y_gerado = gerar_dados(n = 50, sigma = 1)
 X_train, X_test, y_train, y_test = train_test_split(x_gerado, y_gerado, test_size=0.30)
-lambida = [1,2,3]
+lambida = np.linspace(0, 30, num=100)
 
 ks = [5, 10]
 metrics = [rmse, r2]
 
 for metric in metrics:
     for k in ks:
-        lamb, erros = kcv(X_train, y_train, lambida, k = k, metric=metric)
+        erros = kcv(X_train, y_train, lambida, k = k, metric=metric)
+        erro = 0 # vai sair em nome do Senhor
+        if metric == r2:
+            lamb = lambida[np.argmax(erros)]
+            erro = max(erros)
+        else:
+            lamb = lambida[np.argmin(erros)]
+            erro = min(erros)
+
         print("Melhor lambda:", lamb)
         #print("Erros:", erros)
 
@@ -186,4 +216,15 @@ for metric in metrics:
         # avaliar modelo
         print(f"{metric.__name__} teste(k = {k}): {metric(y_test, y_pred)}")
         print()
+    
+        # lambda vs erro médio plot
+        plt.plot(lambida, erros)
+        plt.scatter([lamb], [erro], color='red', label = 'lambda otimo')
+        plt.xlabel('Lambda')
+        plt.ylabel('Erro Medio')
+        plt.title(f'Lambda vs Erro Medio {metric.__name__} e k={k}')
+        img_save(f'Lambda vs Erro Medio {metric.__name__} e k={k}')
+
+
+
   
