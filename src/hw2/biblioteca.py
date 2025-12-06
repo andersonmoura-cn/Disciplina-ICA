@@ -7,16 +7,18 @@ from sklearn.model_selection import train_test_split
 from pathlib import Path
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold, cross_val_score
-
-
-
 import statsmodels.api as sm
 from sklearn.preprocessing import StandardScaler
+import tensorflow as tf 
+from tensorflow import keras 
+from tensorflow.keras import layers
 
+###########################################################
+# seed
+np.random.seed(16)
 
-np.random.seed(42)
-
-# mudanca do chatgpt:
+###########################################################
+# salvar imagem
 def img_save(file_name):
     # Caminho base: projeto (DISCIPLINA-ICA)
     base = Path(__file__).resolve().parent.parent.parent  
@@ -33,16 +35,8 @@ def img_save(file_name):
 
     print(f"Imagem salva em: {file_path}")
 
-
-def gerar_dados(n = 100, sigma = 0, grau = 5):
-    x_teste = np.linspace(0, 532, n).reshape(-1, 1)
-    X = np.hstack([x_teste**i for i in range(1, grau + 1)])
-
-    ruido = np.random.normal(0, sigma, n)
-    y_teste = 3 + 5 * x_teste[:, 0] + ruido
-    return X, y_teste
-
-
+###########################################################
+# OLS ajuste e transformacao
 def OLS_beta(x, y, lambida = 0):
     x = np.array(x)
     y = np.array(y)
@@ -50,10 +44,13 @@ def OLS_beta(x, y, lambida = 0):
     
     X = np.hstack((beta_0, x))
 
-    if np.linalg.det(X.T @ X) == 0:
-        print("Aviso: Matriz singular")
-    else:
-        inv = np.linalg.inv(X.T @ X + lambida * np.eye(X.shape[1]))
+    # if np.linalg.det(X.T @ X + lambida * np.eye(X.shape[1])) == 0:
+    #     print("Aviso: Matriz singular")
+    #     inv = np.linalg.pinv(X.T @ X + lambida * np.eye(X.shape[1]))
+    # else:
+    #     inv = np.linalg.inv(X.T @ X + lambida * np.eye(X.shape[1]))
+    
+    inv = np.linalg.pinv(X.T @ X + lambida * np.eye(X.shape[1]))
     Beta = inv @ X.T @ y 
     #print(X)
     return Beta, X
@@ -66,27 +63,21 @@ def OLS_predict(X, Beta):
     y_pred = X_pred @ Beta
     return y_pred
 
-# x = [1,2,3,4,5,6,7,8,9,10]
-# y = [3,4,5,2,3,7,7,8,9,10]
-
-# Beta, X = OLS_beta(x, y)
-# y_p = OLS_predict(X, Beta)
-# print(y_p)
-
-
-def k_fold(x,y,k, sort = True):
+###########################################################
+# k-fold
+def k_fold(x,y,k, shuffle = True):
     x = np.array(x)
     y = np.array(y)
 
     # embaralha indices
     indices = np.arange(len(x))
 
-    if sort:
+    if shuffle:
         np.random.shuffle(indices)
 
-    # embaralha dados usando indices
-    X_emb = x[indices]
-    Y_emb = y[indices]
+    # # embaralha dados usando indices
+    # X_emb = x[indices]
+    # Y_emb = y[indices]
 
     # divide indices em k partes
     folds_indices = np.array_split(indices, k)
@@ -99,138 +90,235 @@ def k_fold(x,y,k, sort = True):
         indices_treino = np.concatenate([folds_indices[j] for j in range(k) if j != i])
 
         # divisao dos dados
-        X_treino, Y_treino = X_emb[indices_treino], Y_emb[indices_treino]
+        X_treino, Y_treino = x[indices_treino], y[indices_treino]
         
-        X_teste, Y_teste = X_emb[indices_teste], Y_emb[indices_teste]
+        X_teste, Y_teste = x[indices_teste], y[indices_teste]
     
         folds.append([X_treino, Y_treino,X_teste, Y_teste])
     
     return folds
 
-
-# x = [
-#     [1, 69],
-#     [2, 7],
-#     [3, 2],
-#     [4, 1],
-#     [5, 9]
-# ]
-
-# y = [[3], [4],[5] , [2], [16]]
-
-# lepo = k_fold(x, y, 5)
-
-# for i in lepo:
-#     print("Treino X:", i[0])
-#     print("Treino Y:", i[1])
-#     print("Teste  X:", i[2])
-#     print("Teste  Y:", i[3])
-#     print()
-
-def kcv(x,y,params, k = 5, metric = rmse, modelo = OLS_beta, sort = True):
-    folds = k_fold(x, y, k, sort=sort)
-    erros = []
-
-    for lamb in params:
-        erro_medio = 0
-        n = 1
-        for j in folds:
-            # folds:  0: x_treino, 1: y_treino, 2: x_validacao, 3: y_validacao
-            x_treino, y_treino, x_validacao, y_validacao = j[0], j[1], j[2], j[3]
-            # escolha de beta
-            Beta, _ = modelo(x_treino, y_treino, lamb)
-            
-            # predicao
-            y_pred = OLS_predict(x_validacao, Beta)   
-
-            # erro médio acumulado 
-            erro_medio = erro_medio + metric(y_validacao, y_pred) / n
-            n+=1
+###########################################################
+# kcv
+def kcv(x, y, lamb = 0, k = 5, metric = rmse, modelo = OLS_beta, shuffle = True):
+    folds = k_fold(x, y, k, shuffle=shuffle)
+    erro_medio = 0
+    for j in folds:
+        # folds:  0: x_treino, 1: y_treino, 2: x_validacao, 3: y_validacao
+        x_treino, y_treino, x_validacao, y_validacao = j[0], j[1], j[2], j[3]
+        # escolha de beta
+        Beta, _ = modelo(x_treino, y_treino, lamb)
         
-        erros.append(erro_medio)
-    return erros
+        # predicao
+        y_pred = OLS_predict(x_validacao, Beta)   
+
+        y_validacao = y_validacao.ravel()
+        y_pred = y_pred.ravel()
+
+        # erro médio acumulado 
+        #erro_medio = erro_medio + metric(y_validacao, y_pred) / n
+        erro_medio += metric(y_validacao, y_pred)
+
     
-# teste
-x_gerado, y_gerado = gerar_dados(n = 50, sigma = 1)
-X_train, X_test, y_train, y_test = train_test_split(x_gerado, y_gerado, test_size=0.30)
-lambida = np.linspace(0, 30, num=100)
+    erro_medio /= len(folds)
+    return erro_medio
 
-ks = [5, 10]
-metrics = [rmse, r2]
 
-# nossa implementacao
-for metric in metrics:
-    for k in ks:
-        erros = kcv(X_train, y_train, lambida, k = k, metric=metric)
+###########################################################
+# escolha de melhor parametro lambda
+def melhor_lambda(x, y, lambida, k, metrics, modelo = OLS_beta, shuffle = True):
+    for metric in metrics:
+        erros = []
+        for lamb in lambida:
+            erro_medio = kcv(x, y, lamb = lamb, k = k, metric = metric, modelo = modelo, shuffle=shuffle)
+            erros.append(erro_medio)
+        
+        erro_rmse = 0
+        erro_r2 = 0 
+        if metric == r2:
+            lambd_r2 = lambida[np.argmax(erros)]
+            erro_r2 = max(erros)
+            #print(erros)
+        else:
+            lambd_rmse = lambida[np.argmin(erros)]
+            erro_rmse = min(erros)
+            #print(erros)
+
+        
+    print(f"Para RMSE, Melhor lambda: {lambd_rmse}, com erro de {erro_rmse}")
+    print(f"Para R², Melhor lambda: {lambd_r2}, com erro de {erro_r2}")    
+    return lambd_r2, lambd_rmse
+
+###########################################################
+# escolha de melhor parametro M
+
+def melhor_M(X_train, X_test, y_train, y_test, k, Ms, modelo, metrics): 
+    # modelo 1 = PLS; modelo 2 = PCR
+    folds = k_fold(X_train, y_train, k, shuffle=False)
+    for metric in metrics:
+        erros = []
+        for M in Ms:
+                erro_metrica = []
+                erro_medio = 0
+                for j in folds:
+                    # folds:  0: x_treino, 1: y_treino, 2: x_validacao, 3: y_validacao
+                    x_treino, y_treino, x_validacao, y_validacao = j[0], j[1], j[2], j[3]
+                    
+                    if modelo == 1:
+                        # PLS
+                        Z_treino, parametros = PLS_fit_transform(x_treino, y_treino, M)
+                        Z_teste = PLS_transform(x_validacao, parametros)
+                    else:
+                        #PCR
+                        vecs, vals = PCA(x_treino)
+                        Z_treino = PCA_transform(x_treino, vecs, n_componentes=M)
+                        Z_teste = PCA_transform(x_validacao, vecs, n_componentes=M)
+                        
+                    # nossa implementacao
+                    # escolha de beta 
+                    Beta, _ = OLS_beta(Z_treino, y_treino)
+                    
+                    # predicao
+                    y_pred = OLS_predict(Z_teste, Beta)   
+
+                    # erro médio acumulado 
+                    erro_metrica.append(metric(y_validacao, y_pred))
+                    
+                erro_medio = np.mean(erro_metrica)
+                erros.append(erro_medio)
+
         erro = 0 # vai sair em nome do Senhor
         if metric == r2:
-            lamb = lambida[np.argmax(erros)]
+            m = Ms[np.argmax(erros)]
             erro = max(erros)
+            #print(erros)
         else:
-            lamb = lambida[np.argmin(erros)]
+            m = Ms[np.argmin(erros)]
             erro = min(erros)
+            #print(erros)
 
-        print("Melhor lambda:", lamb)
-        #print("Erros:", erros)
-
-        # treina modelo com lambda escolhido
-        Beta, _ = OLS_beta(X_train, y_train, lamb)
-
-        # predicao
-        y_pred = OLS_predict(X_test, Beta)  
-
-        # avaliar modelo
-        print(f"{metric.__name__} teste(k = {k}): {metric(y_test, y_pred)}")
-        print()
+        print(f"Para {metric.__name__}, Melhor M: {m}, com erro de {erro}")
+        
+    return m
     
-        # lambda vs erro médio plot
-        plt.plot(lambida, erros)
-        plt.scatter([lamb], [erro], color='red', label = 'lambda otimo')
-        plt.xlabel('Lambda')
-        plt.ylabel('Erro Medio')
-        plt.title(f'Lambda vs Erro Medio {metric.__name__} e k={k}')
-        img_save(f'Lambda vs Erro Medio {metric.__name__} e k={k}')
 
-#funcao pronta
+##########################################################
+# PCR ajuste e transformacao
 
-X_train_sm = sm.add_constant(X_train)
-X_test_sm = sm.add_constant(X_test)
+# pre-requisito: Z = X padronizado
+def PCA(Z):
+    # matriz de covariancia
+    Cov = pd.DataFrame(Z).cov()
 
-# Treinamento
-model_sm = sm.OLS(y_train, X_train_sm).fit()
+    # autovetores e autovalores
+    vals, vecs = np.linalg.eigh(Cov)              # C é simétrica
+    order = np.argsort(vals)[::-1]              # ordem decrescente
+    vals = vals[order]
+    vecs = vecs[:, order]
+    
+    return vecs, vals
 
-# Predição
-y_pred_sm = model_sm.predict(X_test_sm)
-
-# Métricas Built-in (usando sklearn.metrics para padronizar a saída)
-rmse_sm = rmse(y_test, y_pred_sm)
-r2_sm = r2(y_test, y_pred_sm)
-
-# COMPARAÇÃO PARTE 1
-print(f"{'Métrica':<10} | {'Funcao do Zero(1)':<15} | {'Funcao Pronta(1)':<15}")
-print("-" * 45)
-print("\n" + "="*50 + "\n")
+def PCA_transform(Z, vecs, n_componentes):
+    Z_pca = Z @ vecs[:, :n_componentes]
+    return Z_pca
 
 
-kf = KFold(n_splits=k, shuffle=True, random_state=None) # Random state None para acompanhar o shuffle manual se alinhado
-# Nota: Para comparação exata, deveríamos usar os mesmos índices, mas aqui comparamos as médias estatísticas.
+##########################################################
+# PLS ajuste e transformacao
+# Pré-requisito: x padronizado 
+def PLS_fit_transform(x, Y, M):
+    # hipoteses
+    y_mean = np.mean(Y)
+    y_cartola = Y - y_mean
 
-model_sklearn = LinearRegression()
+    # código
+    y_chapeu = np.full_like(y_cartola, y_cartola.mean())
 
-# Pipeline é a forma correta "built-in" de fazer scaling dentro do CV
-from sklearn.pipeline import make_pipeline
-pipeline = make_pipeline(StandardScaler(), LinearRegression())
+    # parametros
+    theta_list = []
+    phi_list = []
+    load_list = []
+    Z_list = []
+    
+    for m in range(M):
+        Zm = np.zeros_like(y_cartola)
+        phi_m = []
 
-# RMSE (sklearn usa neg_root_mean_squared_error, precisamos inverter o sinal)
-rmse_cv_scores = cross_val_score(pipeline, X_train, y_train, cv=kf, scoring='neg_root_mean_squared_error')
-rmse_cv_builtin = -rmse_cv_scores.mean()
+        # pesos
+        for j in range(x.shape[1]):
+            phi_mj = np.dot(x[:, j],y_cartola)
+            phi_m.append(phi_mj)
+            Zm += phi_mj * x[:, j]
+        
+        phi_list.append(phi_m)
+        Z_list.append(Zm)
+        
+        theta = np.dot(Zm,y_cartola) / np.dot(Zm,Zm)
+        
+        theta_list.append(theta)
 
-# R2
-r2_cv_scores = cross_val_score(pipeline, X_train, y_train, cv=kf, scoring='r2')
-r2_cv_builtin = r2_cv_scores.mean()
+        # novo y
+        y_chapeu = y_chapeu + theta * Zm 
 
-# COMPARAÇÃO PARTE 2
-print(f"{'Métrica (Média CV)':<20} | {'Funcao do Zero(2)':<15} | {'Funcao Pronta(2)':<15}")
-print("-" * 55)
+        # loadings
+        p_m = []
+        for j in range(x.shape[1]):
+            xj = x[:, j]
+            term = np.dot(Zm,xj) / np.dot(Zm, Zm)
+            p_m.append(term)
+            x[:, j] = xj - term * Zm
+        load_list.append(np.array(p_m))
+    
+    Z_train = np.column_stack(Z_list)
 
-print("\nNota: Pequenas diferenças no CV podem ocorrer devido à aleatoriedade (shuffle) dos índices em cada execução.")
+    params = {
+        "phi": np.vstack(phi_list),     
+        "loadings": np.vstack(load_list), 
+        "theta": np.array(theta_list),
+        "y_mean": y_mean,
+    }
+    return Z_train, params
+
+def PLS_transform(X, parametros):
+    phi = parametros['phi']
+    loadings = parametros['loadings']
+
+    Z_teste = []
+
+    for m in range(len(phi)):
+        phi_m = phi[m]
+        load_m = loadings[m]
+        
+        Z = X @ phi_m
+        Z_teste.append(Z)
+
+        Z = Z.reshape(-1, 1)   # vira (n, 1)
+        load_m = load_m.reshape(1, -1)   # vira (1, p)
+
+        X = X - Z @ load_m
+
+    return np.column_stack(Z_teste)
+
+##########################################################
+# rede neural
+def rede_neural(n_features, lr = 0.001):
+    modelo = keras.Sequential([
+        layers.Dense(50, activation = 'relu', input_shape = ((n_features),)),
+        
+
+        layers.Dense(20, activation = 'relu'),
+        
+
+        layers.Dense(8, activation = 'relu'),
+        
+        
+        layers.Dense(1)
+    ])
+
+    modelo.compile(
+        optimizer = keras.optimizers.Adam(learning_rate = lr),
+        loss = 'mse',
+        metrics = ['mae']
+    )
+
+    return modelo
