@@ -11,7 +11,9 @@ import statsmodels.api as sm
 from sklearn.preprocessing import StandardScaler
 import tensorflow as tf 
 from tensorflow import keras 
-from tensorflow.keras import layers
+# from tensorflow.keras import layers
+import keras
+from keras import layers
 
 ###########################################################
 # seed
@@ -37,7 +39,7 @@ def img_save(file_name):
 
 ###########################################################
 # OLS ajuste e transformacao
-def OLS_beta(x, y, lambida = 0):
+def OLS_beta(x, y, lambida = 0, pinv = True):
     x = np.array(x)
     y = np.array(y)
     beta_0 = np.ones((x.shape[0], 1))
@@ -49,8 +51,20 @@ def OLS_beta(x, y, lambida = 0):
     #     inv = np.linalg.pinv(X.T @ X + lambida * np.eye(X.shape[1]))
     # else:
     #     inv = np.linalg.inv(X.T @ X + lambida * np.eye(X.shape[1]))
+
     
-    inv = np.linalg.pinv(X.T @ X + lambida * np.eye(X.shape[1]))
+
+    #print("Tem NaNs no X?", np.isnan(X).any() if hasattr(X, 'any') else "N/A")
+    #print("-------------")
+
+    # Sua linha original
+    Beta, residuals, rank, s = np.linalg.lstsq(X, y, rcond=None)
+    
+    
+    if pinv:
+        inv = np.linalg.pinv(X.T @ X + lambida * np.eye(X.shape[1]))
+    else:    
+        inv = np.linalg.inv(X.T @ X + lambida * np.eye(X.shape[1]))
     Beta = inv @ X.T @ y 
     #print(X)
     return Beta, X
@@ -100,14 +114,14 @@ def k_fold(x,y,k, shuffle = True):
 
 ###########################################################
 # kcv
-def kcv(x, y, lamb = 0, k = 5, metric = rmse, modelo = OLS_beta, shuffle = True):
+def kcv(x, y, lamb = 0, k = 5, metric = rmse, modelo = OLS_beta, shuffle = True, pinv = True):
     folds = k_fold(x, y, k, shuffle=shuffle)
     erro_medio = 0
     for j in folds:
         # folds:  0: x_treino, 1: y_treino, 2: x_validacao, 3: y_validacao
         x_treino, y_treino, x_validacao, y_validacao = j[0], j[1], j[2], j[3]
         # escolha de beta
-        Beta, _ = modelo(x_treino, y_treino, lamb)
+        Beta, _ = modelo(x_treino, y_treino, lamb, pinv = pinv)
         
         # predicao
         y_pred = OLS_predict(x_validacao, Beta)   
@@ -127,14 +141,16 @@ def kcv(x, y, lamb = 0, k = 5, metric = rmse, modelo = OLS_beta, shuffle = True)
 ###########################################################
 # escolha de melhor parametro lambda
 def melhor_lambda(x, y, lambida, k, metrics, modelo = OLS_beta, shuffle = True):
+    erro_rmse = 0
+    erro_r2 = 0
+    lambd_r2 = None
+    lambd_rmse = None
     for metric in metrics:
         erros = []
         for lamb in lambida:
-            erro_medio = kcv(x, y, lamb = lamb, k = k, metric = metric, modelo = modelo, shuffle=shuffle)
+            erro_medio = kcv(x, y, lamb = lamb, k = k, metric = metric, modelo = modelo, shuffle=shuffle, pinv = False)
             erros.append(erro_medio)
-        
-        erro_rmse = 0
-        erro_r2 = 0 
+         
         if metric == r2:
             lambd_r2 = lambida[np.argmax(erros)]
             erro_r2 = max(erros)
@@ -152,54 +168,60 @@ def melhor_lambda(x, y, lambida, k, metrics, modelo = OLS_beta, shuffle = True):
 ###########################################################
 # escolha de melhor parametro M
 
-def melhor_M(X_train, X_test, y_train, y_test, k, Ms, modelo, metrics): 
+def melhor_M(X_train, y_train, k, Ms, modelo, metrics): 
     # modelo 1 = PLS; modelo 2 = PCR
     folds = k_fold(X_train, y_train, k, shuffle=False)
+    erro_rmse = 0
+    erro_r2 = 0
     for metric in metrics:
         erros = []
         for M in Ms:
-                erro_metrica = []
-                erro_medio = 0
-                for j in folds:
-                    # folds:  0: x_treino, 1: y_treino, 2: x_validacao, 3: y_validacao
-                    x_treino, y_treino, x_validacao, y_validacao = j[0], j[1], j[2], j[3]
+            erro_metrica = []
+            erro_medio = 0
+            for j in folds:
+                # folds:  0: x_treino, 1: y_treino, 2: x_validacao, 3: y_validacao
+                x_treino, y_treino, x_validacao, y_validacao = j[0], j[1], j[2], j[3]
+                
+                if modelo == 1:
+                    # PLS
+                    Z_treino, parametros = PLS_fit_transform(x_treino, y_treino, M)
+                    Z_teste = PLS_transform(x_validacao, parametros)
+                else:
+                    #PCR
+                    vecs, vals = PCA(x_treino)
+                    Z_treino = PCA_transform(x_treino, vecs, n_componentes=M)
+                    Z_teste = PCA_transform(x_validacao, vecs, n_componentes=M)
                     
-                    if modelo == 1:
-                        # PLS
-                        Z_treino, parametros = PLS_fit_transform(x_treino, y_treino, M)
-                        Z_teste = PLS_transform(x_validacao, parametros)
-                    else:
-                        #PCR
-                        vecs, vals = PCA(x_treino)
-                        Z_treino = PCA_transform(x_treino, vecs, n_componentes=M)
-                        Z_teste = PCA_transform(x_validacao, vecs, n_componentes=M)
-                        
-                    # nossa implementacao
-                    # escolha de beta 
-                    Beta, _ = OLS_beta(Z_treino, y_treino)
-                    
-                    # predicao
-                    y_pred = OLS_predict(Z_teste, Beta)   
+                # nossa implementacao
+                # escolha de beta 
+                Beta, _ = OLS_beta(Z_treino, y_treino)
+                
+                # predicao
+                y_pred = OLS_predict(Z_teste, Beta)   
 
-                    # erro médio acumulado 
-                    erro_metrica.append(metric(y_validacao, y_pred))
-                    
-                erro_medio = np.mean(erro_metrica)
-                erros.append(erro_medio)
+                # erro médio acumulado 
+                erro_metrica.append(metric(y_validacao, y_pred))
+                
+            erro_medio = np.mean(erro_metrica)
+            erros.append(erro_medio)
 
-        erro = 0 # vai sair em nome do Senhor
+            if len(erros) > 1 and (np.abs(erros[-1] - erros[-2]) < 1e-2):
+                break
+
+
         if metric == r2:
-            m = Ms[np.argmax(erros)]
-            erro = max(erros)
+            m_R2 = Ms[np.argmax(erros)]
+            erro_r2 = max(erros)
             #print(erros)
         else:
-            m = Ms[np.argmin(erros)]
-            erro = min(erros)
+            m_RMSE = Ms[np.argmin(erros)]
+            erro_rmse = min(erros)
             #print(erros)
 
-        print(f"Para {metric.__name__}, Melhor M: {m}, com erro de {erro}")
+    print(f"Para RMSE, Melhor M: {m_RMSE}, com erro de {erro_rmse}")
+    # print(f"Para R2, Melhor M: {m_R2}, com erro de {erro_r2}")
         
-    return m
+    return m_RMSE, m_R2
     
 
 ##########################################################
@@ -225,8 +247,12 @@ def PCA_transform(Z, vecs, n_componentes):
 
 ##########################################################
 # PLS ajuste e transformacao
+
 # Pré-requisito: x padronizado 
 def PLS_fit_transform(x, Y, M):
+    x = np.asarray(x).copy()
+    Y = np.asarray(Y)
+
     # hipoteses
     y_mean = np.mean(Y)
     y_cartola = Y - y_mean
@@ -249,6 +275,10 @@ def PLS_fit_transform(x, Y, M):
             phi_mj = np.dot(x[:, j],y_cartola)
             phi_m.append(phi_mj)
             Zm += phi_mj * x[:, j]
+            
+        # if np.dot(Zm, Zm) == 0:
+        #     print(f"Zm: {Zm} \n m|M: {m}|{M} \n")
+        #     break
         
         phi_list.append(phi_m)
         Z_list.append(Zm)
@@ -279,7 +309,9 @@ def PLS_fit_transform(x, Y, M):
     }
     return Z_train, params
 
+# Pré-requisito: x padronizado 
 def PLS_transform(X, parametros):
+    X = np.asarray(X).copy()
     phi = parametros['phi']
     loadings = parametros['loadings']
 
@@ -298,6 +330,7 @@ def PLS_transform(X, parametros):
         X = X - Z @ load_m
 
     return np.column_stack(Z_teste)
+
 
 ##########################################################
 # rede neural
