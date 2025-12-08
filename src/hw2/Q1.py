@@ -43,6 +43,10 @@ rmse_sm = rmse(y_test, y_pred_sm)
 r2_sm = r2(y_test, y_pred_sm)
 
 # COMPARAÇÃO PARTE 1
+print(" ")
+print("Aplicação da OLS")
+print(" ")
+
 print(f"{'Métrica'} | {'Funcao do Zero(1)'} | {'Funcao Pronta(1)'}")
 
 
@@ -54,6 +58,9 @@ k = 5
 rmse_scores = []
 r2_scores = []
 
+print(" ")
+print("Erro médio aplicando cross validation com k = 5")
+print(" ")
 # Funcao criada
 
 erro_rmse = bib.kcv(X_train, y_train, k = k, metric=rmse, shuffle=False)

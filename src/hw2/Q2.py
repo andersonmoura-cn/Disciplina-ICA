@@ -25,7 +25,7 @@ X_test = df_teste.drop("HR", axis=1)
 y_test = df_teste["HR"]
 
 #####################################################
-print("Nosso KCV\n")
+print("Melhor lambda com nossa implementação: \n")
 # Nossa implementacao
 # escolhendo melhor lmbda
 lambida = np.linspace(0, 15, num=50)
@@ -39,6 +39,7 @@ Beta, _ = bib.OLS_beta(X_train, y_train, lambida=lamb_rmse)
 y_pred = bib.OLS_predict(X_test, Beta)
 
 # avaliar modelo
+print("Aplicando o melhor lambda na OLS de Ridge feita por nós: \n")
 print(f"RMSE teste (k = {k}): {rmse(y_test, y_pred)}", end='\n\n')
 print(f"R² teste (k = {k}): {r2(y_test, y_pred)}", end='\n\n')
 print("-"*30)
@@ -47,6 +48,7 @@ print("-"*30)
 # print(f"Y predizido: {y_pred}")
 
 # Implementacao pronta
+print("Aplicando o melhor lambda na OLS de Ridge built-in: \n")
 X_tr_sm = sm.add_constant(X_train)
 X_val_sm  = sm.add_constant(X_test)
 
@@ -58,7 +60,7 @@ print(f"R² teste (k = {k}) com função pronta: {r2(y_test, y_pred_sm)}", end='
 
 #####################################################
 # CV pronto
-print("KCV pronto")
+print("Melhor lambda com KCV built-in: \n")
 
 kf = KFold(n_splits=k, shuffle=False, random_state=None)
 

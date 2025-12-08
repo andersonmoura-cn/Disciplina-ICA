@@ -1,6 +1,8 @@
 import tensorflow as tf 
 from tensorflow import keras 
-from tensorflow.keras import layers 
+# from tensorflow.keras import layers
+import keras
+from keras import layers
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -23,7 +25,7 @@ X_test = df_teste.drop("HR", axis=1)
 y_test = df_teste["HR"]
 
 # treinando rede neural com nosso dataset 
-modelo = rede_neural()
+modelo = rede_neural(14)
 history = modelo.fit(X_train, y_train, epochs = 100, batch_size = 256, validation_split = 0.2)
 
 y_pred_test = modelo.predict(X_test)

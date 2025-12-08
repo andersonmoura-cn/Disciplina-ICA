@@ -45,12 +45,10 @@ Beta, _ = bib.OLS_beta(Z_train, y_train)
 y_predicted = bib.OLS_predict(Z_test, Beta)
 
  # avaliar modelo
+print("Aplicando o melhor M na nossa PLS: \n")
 print(f"RMSE teste(k = {k}): {rmse(y_test, y_predicted)}")
 print()
 print(f"R² teste(k = {k}): {r2(y_test, y_predicted)}")
-print("---------------------------")
-print(f"Y real de teste: {y_test}")
-print(f"Y predizido: {y_predicted}")
 
 print("-----------------------------------PCR------------------------------------")
  #PCR
@@ -66,9 +64,7 @@ Beta, _ = bib.OLS_beta(Z_train, y_train)
 y_predicted = bib.OLS_predict(Z_test, Beta)
 
  # avaliar modelo
+print("Aplicando o melhor M na nossa PCR: \n")
 print(f"RMSE teste(k = {k}): {rmse(y_test, y_predicted)}")
 print()
 print(f"R² teste(k = {k}): {r2(y_test, y_predicted)}")
-print("---------------------------")
-print(f"Y real de teste: {y_test}")
-print(f"Y predizido: {y_predicted}")

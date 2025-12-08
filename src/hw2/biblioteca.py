@@ -57,8 +57,7 @@ def OLS_beta(x, y, lambida = 0, pinv = True):
     #print("Tem NaNs no X?", np.isnan(X).any() if hasattr(X, 'any') else "N/A")
     #print("-------------")
 
-    # Sua linha original
-    Beta, residuals, rank, s = np.linalg.lstsq(X, y, rcond=None)
+    # Beta, residuals, rank, s = np.linalg.lstsq(X, y, rcond=None)
     
     
     if pinv:
