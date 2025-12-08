@@ -1,2 +1,4 @@
 /data/time_domain_features_test.csv
 /data/time_domain_features_train.csv
+__pycache__/
+*.pyc
