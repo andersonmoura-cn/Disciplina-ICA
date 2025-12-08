@@ -140,24 +140,56 @@ def kcv(x, y, lamb = 0, k = 5, metric = rmse, modelo = OLS_beta, shuffle = True,
 ###########################################################
 # escolha de melhor parametro lambda
 def melhor_lambda(x, y, lambida, k, metrics, modelo = OLS_beta, shuffle = True):
+    rmse_vals = []
+    r2_vals = []
+
     erro_rmse = 0
     erro_r2 = 0
     lambd_r2 = None
     lambd_rmse = None
-    for metric in metrics:
-        erros = []
-        for lamb in lambida:
-            erro_medio = kcv(x, y, lamb = lamb, k = k, metric = metric, modelo = modelo, shuffle=shuffle, pinv = False)
-            erros.append(erro_medio)
-         
-        if metric == r2:
-            lambd_r2 = lambida[np.argmax(erros)]
-            erro_r2 = max(erros)
-            #print(erros)
-        else:
-            lambd_rmse = lambida[np.argmin(erros)]
-            erro_rmse = min(erros)
-            #print(erros)
+
+    # cálculo dos erros
+    for lamb in lambida:
+
+        # RMSE
+        erro_rmse_k = kcv(x, y, lamb=lamb, k=k, metric=rmse,
+                          modelo=modelo, shuffle=shuffle, pinv=False)
+        rmse_vals.append(erro_rmse_k)
+
+        # R2
+        erro_r2_k = kcv(x, y, lamb=lamb, k=k, metric=r2,
+                        modelo=modelo, shuffle=shuffle, pinv=False)
+        r2_vals.append(erro_r2_k)
+
+    # determina lambdas ótimos
+    lambd_rmse = lambida[np.argmin(rmse_vals)]
+    erro_rmse = np.min(rmse_vals)
+
+    lambd_r2 = lambida[np.argmax(r2_vals)]
+    erro_r2 = np.max(r2_vals)
+            
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(lambida, rmse_vals, marker='o', label="RMSE (CV)")
+    plt.plot(lambida, r2_vals, marker='s', label="R² (CV)")
+
+    # marca lambda ótimo (RMSE)
+    plt.axvline(lambd_rmse, linestyle='--', color='red', alpha=0.7)
+    plt.scatter(lambd_rmse, erro_rmse, color='red', s=80,
+                label=f"λ ótimo RMSE = {lambd_rmse:.4f}")
+
+    # marca lambda ótimo (R²)
+    plt.axvline(lambd_r2, linestyle='--', color='blue', alpha=0.7)
+    plt.scatter(lambd_r2, erro_r2, color='blue', s=80,
+                label=f"λ ótimo R² = {lambd_r2:.4f}")
+
+    plt.xlabel("λ")
+    plt.ylabel("Erro")
+    plt.title("Cross-validation: RMSE e R² por λ")
+    plt.grid(True)
+    plt.legend()
+
+    img_save("cv_rmse_r2")
 
         
     print(f"Para RMSE, Melhor lambda: {lambd_rmse}, com erro de {erro_rmse}")
@@ -172,6 +204,10 @@ def melhor_M(X_train, y_train, k, Ms, modelo, metrics):
     folds = k_fold(X_train, y_train, k, shuffle=False)
     erro_rmse = 0
     erro_r2 = 0
+    rmse_vals = []
+    r2_vals = []
+    i_melhorM = None
+    candidatos_M = []
     for metric in metrics:
         erros = []
         for M in Ms:
@@ -204,23 +240,79 @@ def melhor_M(X_train, y_train, k, Ms, modelo, metrics):
             erro_medio = np.mean(erro_metrica)
             erros.append(erro_medio)
 
-            if len(erros) > 1 and (np.abs(erros[-1] - erros[-2]) < 1e-2):
-                break
+            if len(erros) > 1 and (np.abs(erros[-1] - erros[-2]) < 1e-2) and metric == rmse:
+                i_melhorM = M - 1
+                candidatos_M.append(M)
 
 
-        if metric == r2:
-            m_R2 = Ms[np.argmax(erros)]
-            erro_r2 = max(erros)
-            #print(erros)
+        if i_melhorM:
+            if metric == r2:
+                r2_vals = erros
+                m_R2 = Ms[i_melhorM]
+                erro_r2 = erros[i_melhorM]
+                #print(erros)
+            else:
+                rmse_vals = erros
+                m_RMSE = Ms[i_melhorM]
+                erro_rmse = erros[i_melhorM]
         else:
-            m_RMSE = Ms[np.argmin(erros)]
-            erro_rmse = min(erros)
-            #print(erros)
+            if metric == r2:
+                r2_vals = erros
+                m_R2 = Ms[np.argmax(erros)]
+                erro_r2 = max(erros)
+                #print(erros)
+            else:
+                rmse_vals = erros
+                m_RMSE = Ms[np.argmin(erros)]
+                erro_rmse = min(erros)
+                #print(erros)
+            
+        
+        
 
+    plt.figure(figsize=(10, 6))
+
+    plt.plot(Ms, rmse_vals, marker='o', label="RMSE (CV)")
+    plt.plot(Ms, r2_vals, marker='s', label="R² (CV)")
+
+    # marca lambda ótimo (RMSE)
+    plt.axvline(m_RMSE, linestyle='--', color='red', alpha=0.7)
+    plt.scatter(m_RMSE, erro_rmse, color='red', s=80,
+                label=f"M ótimo RMSE = {m_RMSE:.4f}")
+
+    # marca lambda ótimo (R²)
+    plt.axvline(m_R2, linestyle='--', color='blue', alpha=0.7)
+    plt.scatter(m_R2, erro_r2, color='blue', s=80,
+                label=f"M ótimo R² = {m_R2:.4f}")
+
+    cores_candidatos = ["purple", "green", "orange"]
+
+    for idx, Mc in enumerate(candidatos_M[:3]):   # pega no máximo 3
+        iMc = np.where(Ms == Mc)[0][0]
+        plt.scatter(
+            Mc,
+            rmse_vals[iMc],
+            color=cores_candidatos[idx],
+            s=180,
+            marker="X",
+            label=f"Candidato {idx+1}: M={Mc}"
+        )
+        
+    plt.xlabel("M")
+    plt.ylabel("Erro")
+    plt.title("Cross-validation: RMSE e R² por M (Com candidatos)")
+    plt.grid(True)
+    plt.legend()
+
+    if modelo == 1:
+        img_save("cv_rmse_r2_M_PLS")
+    else:
+        img_save("cv_rmse_r2_M_PCR")
+    
     print(f"Para RMSE, Melhor M: {m_RMSE}, com erro de {erro_rmse}")
     # print(f"Para R2, Melhor M: {m_R2}, com erro de {erro_r2}")
         
-    return m_RMSE, m_R2
+    return m_RMSE, m_R2, candidatos_M
     
 
 ##########################################################
@@ -335,13 +427,14 @@ def PLS_transform(X, parametros):
 # rede neural
 def rede_neural(n_features, lr = 0.001):
     modelo = keras.Sequential([
-        layers.Dense(50, activation = 'relu', input_shape = ((n_features),)),
+        layers.Dense(40, activation = 'relu', input_shape = ((n_features),)),
         
 
-        layers.Dense(20, activation = 'relu'),
+        layers.Dense(16, activation = 'relu'),
         
 
         layers.Dense(8, activation = 'relu'),
+        layers.Dropout(0.2),
         
         
         layers.Dense(1)

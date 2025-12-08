@@ -27,10 +27,10 @@ k = 5
 metrics = [rmse, r2]
 
 print("Melhor M para PLS:")
-m_RMSE_PLS, m_R2_PLS = bib.melhor_M(X_train, y_train, k, Ms, 1, metrics)
+m_RMSE_PLS, m_R2_PLS, candidatos_M_PLS = bib.melhor_M(X_train, y_train, k, Ms, 1, metrics)
 
 print("Melhor M para PCR:")
-m_RMSE_PCR, m_R2_PCR = bib.melhor_M(X_train, y_train, k, Ms, 2, metrics)
+m_RMSE_PCR, m_R2_PCR, candidatos_M_PCR = bib.melhor_M(X_train, y_train, k, Ms, 2, metrics)
 
 print("-----------------------------------PLS------------------------------------")
 # PLS

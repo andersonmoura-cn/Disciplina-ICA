@@ -28,7 +28,7 @@ y_test = df_teste["HR"]
 print("Melhor lambda com nossa implementação: \n")
 # Nossa implementacao
 # escolhendo melhor lmbda
-lambida = np.linspace(0, 15, num=50)
+lambida = np.linspace(0, 1, num=10)
 k = 5
 metrics = [rmse, r2]
 
