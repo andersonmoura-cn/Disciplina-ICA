@@ -335,13 +335,14 @@ def PLS_transform(X, parametros):
 # rede neural
 def rede_neural(n_features, lr = 0.001):
     modelo = keras.Sequential([
-        layers.Dense(50, activation = 'relu', input_shape = ((n_features),)),
+        layers.Dense(40, activation = 'relu', input_shape = ((n_features),)),
         
 
-        layers.Dense(20, activation = 'relu'),
+        layers.Dense(16, activation = 'relu'),
         
 
         layers.Dense(8, activation = 'relu'),
+        layers.Dropout(0.2),
         
         
         layers.Dense(1)
