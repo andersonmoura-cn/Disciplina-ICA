@@ -48,7 +48,7 @@ variaveis = list(X_train.columns)
 # Inicialização
 # modelo_lda = LinearDiscriminantAnalysis()
 pipe_lda = Pipeline([
-    # ("skew", SkewAutoTransformer(columns=variaveis)),
+    ("skew", SkewAutoTransformer(columns=variaveis)),
     ("scaler", StandardScaler()),
     ("lda", LinearDiscriminantAnalysis())
 ])
