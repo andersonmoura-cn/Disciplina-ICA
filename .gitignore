@@ -2,4 +2,4 @@ __pycache__/
 *.pyc
 .venv/
 .vscode/
-data/dados_nao_tratados.csv
+data/original/dados_nao_tratados.csv

@@ -8,18 +8,11 @@ import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
 
-# dados
-base = Path(__file__).resolve().parent.parent.parent
-arquivo_treino = base / "data/hw3" / "df_treino.csv"
-df_treino = pd.read_csv(arquivo_treino)
-arquivo_teste = base / "data/hw3" / "df_teste.csv"
-df_teste = pd.read_csv(arquivo_teste)
-
-X_train = df_treino.drop("condition", axis=1)
-y_train = df_treino["condition"]
-
-X_test = df_teste.drop("condition", axis=1)
-y_test = df_teste["condition"]
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.neighbors import KNeighborsClassifier
+from assimetria import SkewAutoTransformer
 
 # salvando imagem
 def img_save(file_name):
@@ -39,45 +32,65 @@ def img_save(file_name):
     print(f"Imagem salva em: {file_path}")
 
 
-############## KNN ##############
+# ----------------- dados -----------------
+base = Path(__file__).resolve().parent.parent.parent
+arquivo_treino = base / "data/hw3" / "df_treino.csv"
+df_treino = pd.read_csv(arquivo_treino)
+arquivo_teste = base / "data/hw3" / "df_teste.csv"
+df_teste = pd.read_csv(arquivo_teste)
 
-def melhor_K(X, y, max_k=20):
+X_train = df_treino.drop("condition", axis=1)
+y_train = df_treino["condition"]
+
+X_test = df_teste.drop("condition", axis=1)
+y_test = df_teste["condition"]
+
+variaveis = list(X_train.columns)
+
+# ----------------- KNN com Pipeline -----------------
+print("KNN")
+
+def melhor_K(X, y, colunas, max_k=20):
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     resultados = []
+
     for k in range(1, max_k + 1):
-        model_knn = KNeighborsClassifier(n_neighbors=k)
-        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        pipe = Pipeline([
+            ("skew", SkewAutoTransformer(columns=colunas)),
+            ("scaler", StandardScaler()),
+            ("knn", KNeighborsClassifier(n_neighbors=k)),
+        ])
+
+        # model_knn = KNeighborsClassifier(n_neighbors=k)
+        # cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
         scores = cross_val_score(
-            model_knn,
+            pipe,
             X,
             y,
             cv=cv,
             scoring="accuracy"
         )
-        resultados.append((k, scores.mean()))
+        resultados.append((k, scores.mean(), scores.std()))
     
-    K, acuracia_media = max(resultados, key=lambda x: x[1])
-    print(f"Melhor K = {K}, com acuracia média = {acuracia_media}")
-    return K, acuracia_media
+    K, acuracia_media, acuracia_std = max(resultados, key=lambda x: x[1])
+    print(f"Melhor K = {K}, acurácia média (CV) = {acuracia_media:.4f} ± {acuracia_std:.4f}")
+    return K, acuracia_media, acuracia_std
 
-K, acuracia_media = melhor_K(X_train, y_train)
+K, acuracia_media, acuracia_std  = melhor_K(X_train, y_train, variaveis)
 
-model_knn = KNeighborsClassifier(n_neighbors=K)
-model_knn.fit(X_train, y_train)
-y_pred_knn = model_knn.predict(X_test)
+# treina final no treino inteiro e testa
+pipe_final = Pipeline([
+    ("skew", SkewAutoTransformer(columns=variaveis)),
+    ("scaler", StandardScaler()),
+    ("knn", KNeighborsClassifier(n_neighbors=K)),
+])
+
+pipe_final.fit(X_train, y_train)
+y_pred_knn = pipe_final.predict(X_test)
 print(f"Acurácia no teste: {accuracy_score(y_test, y_pred_knn):.4f}")
 
-# cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-
-# scores = cross_val_score(
-#     model_knn,
-#     X_train,
-#     y_train,
-#     cv=cv,
-#     scoring="accuracy"
-# )
-
 ################### QDA #######################
-
+print("QDA")
 
 model_qda = QuadraticDiscriminantAnalysis()
 
@@ -88,9 +101,9 @@ scores = cross_val_score(
     X_train,
     y_train,
     cv=cv,
-    scoring="accuracy"
+    scoring="accuracy",
+    n_jobs=-1
 )
-
 
 print(f"Acurácia por fold(QDA): {scores}")
 print(f"Acurácia média (CV) - (QDA): {scores.mean():.4f}")
@@ -104,15 +117,29 @@ print(f"Acurácia no teste(QDA): {accuracy_score(y_test, y_pred_qda):.4f}")
 ################### NN ##################
 
 ########## PERCEPTRON #########
-model_perceptron = Perceptron(max_iter=1000, random_state=42)
+print("PERCEPTRON")
+
+# model_perceptron = Perceptron(max_iter=1000, random_state=42)
+
+pipe_perceptron = Pipeline([
+    # ("skew", SkewAutoTransformer(columns=variaveis)),  # parece que normalmente não ajuda Perceptron
+    ("scaler", StandardScaler()),
+    ("perceptron", Perceptron(
+        max_iter=2000,        # mais iterações
+        tol=1e-3,             # critério de parada
+        random_state=42
+    ))
+])
+
 
 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 scores = cross_val_score(
-    model_perceptron,
+    pipe_perceptron,
     X_train,
     y_train,
     cv=cv,
-    scoring="accuracy"
+    scoring="accuracy",
+    n_jobs=-1
 )
 
 print(f"Acurácia por fold: {scores}")
@@ -120,30 +147,48 @@ print(f"Acurácia média (CV): {scores.mean():.4f}")
 print(f"Desvio padrão: {scores.std():.4f}")
 
 # treina no conjunto de treino completo
-model_perceptron.fit(X_train, y_train)
-y_pred_p = model_perceptron.predict(X_test)
+pipe_perceptron.fit(X_train, y_train)
+y_pred_p = pipe_perceptron.predict(X_test)
 print(f"Acurácia no teste: {accuracy_score(y_test, y_pred_p):.4f}")
 
 
 ######### MLP ###########
+print("MLP")
 
-model_mlp = MLPClassifier(hidden_layer_sizes=(50, 50), max_iter=300)
+
+pipe_mlp = Pipeline([
+    # ("skew", SkewAutoTransformer(columns=variaveis)),  # pesa mt e pode não ajudar 
+    ("scaler", StandardScaler()),
+    ("mlp", MLPClassifier(
+        hidden_layer_sizes=(50, 50),
+        solver="adam",
+        max_iter=2000,          # mais iterações
+        early_stopping=True,    # para sozinho se não melhorar
+        n_iter_no_change=20,
+        validation_fraction=0.15,
+        random_state=42
+    ))
+])
+
+
+# model_mlp = MLPClassifier(hidden_layer_sizes=(50, 50), max_iter=300)
 
 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 scores = cross_val_score(
-    model_mlp,
+    pipe_mlp,
     X_train,
     y_train,
     cv=cv,
-    scoring="accuracy"
+    scoring="accuracy",
+    n_jobs=-1
 )
 
-print(scores)
-print(scores.mean())
-print(scores.std())
+print(f"Acurácia por fold: {scores}")
+print(f"Acurácia média (CV): {scores.mean():.4f}")
+print(f"Desvio padrão: {scores.std():.4f}")
 
-model_mlp.fit(X_train, y_train)
-y_pred_mlp = model_mlp.predict(X_test)
+pipe_mlp.fit(X_train, y_train)
+y_pred_mlp = pipe_mlp.predict(X_test)
 print(accuracy_score(y_test, y_pred_mlp))
 
 
