@@ -2,3 +2,4 @@
 /data/time_domain_features_train.csv
 __pycache__/
 *.pyc
+.venv/
