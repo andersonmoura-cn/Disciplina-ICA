@@ -1,0 +1,27 @@
+==================================================
+Método: LDA
+Pré-processamento: sem_preprocessamento_adicional
+Acurácia no teste: 0.7195
+Matriz de confusão:
+[9477, 22068]
+[3615, 56410]
+==================================================
+
+==================================================
+Método: LDA
+Pré-processamento: scale
+Acurácia no teste: 0.7195
+Matriz de confusão:
+[9477, 22068]
+[3615, 56410]
+==================================================
+
+==================================================
+Método: LDA
+Pré-processamento: skew+scale
+Acurácia no teste: 0.7012
+Matriz de confusão:
+[7097, 24448]
+[2917, 57108]
+==================================================
+
