@@ -156,7 +156,7 @@ img_save("matriz_confusao_qda")
 
 salvar_resultado(
     nome_metodo="QDA",
-    preprocessamento="sem_preprocessamento",
+    preprocessamento="sem_preprocessamento_adicional",
     acuracia=acc_qda,
     matriz_confusao=cm_qda
 )
