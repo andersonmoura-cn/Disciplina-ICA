@@ -160,9 +160,51 @@ salvar_resultado(
     acuracia=acc_qda,
     matriz_confusao=cm_qda
 )
+# ----------------------------------------------------------
+print("QDA com scale")
+
+pipe_qda = Pipeline([
+    ("scaler", StandardScaler()),
+    ("qda", QuadraticDiscriminantAnalysis())
+])
+
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+scores = cross_val_score(
+    pipe_qda,
+    X_train,
+    y_train,
+    cv=cv,
+    scoring="accuracy",
+    n_jobs=-1
+)
+
+print(f"Acurácia por fold(QDA): {scores}")
+print(f"Acurácia média (CV) - (QDA): {scores.mean():.4f}")
+print(f"Desvio padrão (QDA): {scores.std():.4f}")
+
+
+pipe_qda.fit(X_train, y_train)
+y_pred_qda = pipe_qda.predict(X_test)
+
+acc_qda_scale = accuracy_score(y_test, y_pred_qda)
+cm_qda_scale = confusion_matrix(y_test, y_pred_qda)
+
+print(f"Acurácia no teste(QDA): {acc_qda_scale:.4f}")
+print(f"Matrix QDA scale: \n {cm_qda_scale}")
+
+disp_qda_scale = ConfusionMatrixDisplay(confusion_matrix=cm_qda_scale, display_labels=noms_classes)
+disp_qda_scale.plot()
+img_save("matriz_confusao_qda_scale")
+
+salvar_resultado(
+    nome_metodo="QDA",
+    preprocessamento="scale",
+    acuracia=acc_qda_scale,
+    matriz_confusao=cm_qda_scale
+)
 
 # ----------------------------------------------------------
-print("QDA com preprocessamento adicional")
+print("QDA com scale+skew")
 
 pipe_qda = Pipeline([
     ("skew", SkewAutoTransformer(columns=variaveis)),
